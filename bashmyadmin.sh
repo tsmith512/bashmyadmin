@@ -4,6 +4,9 @@
 # Parse Arguments and Flags                                #
 ############################################################
 
+SCRIPT_DIR="$(dirname $0)"
+WORKING_DIR="$(pwd)"
+
 GLOBALS="globals.sh"
 PROFILE=""
 COMMAND=""
@@ -11,7 +14,7 @@ SQLFILE=""
 
 while getopts "p:c:f:" option; do
   case "${option}" in
-  p) PROFILE="${OPTARG}.sh";;
+  p) PROFILE="${OPTARG}";;
   c) COMMAND="${OPTARG}";;
   f) SQLFILE="${OPTARG}";;
   esac
@@ -40,12 +43,12 @@ if [ -z "$COMMAND" ]; then
   exit 1;
 fi
 
-source $GLOBALS > /dev/null 2>&1 || {
+source $SCRIPT_DIR/$GLOBALS > /dev/null 2>&1 || {
   echo >&2 "Global configuration file not available.";
   exit 1;
 }
 
-source ${0%/*}/$PROFILE > /dev/null 2>&1 || {
+source $WORKING_DIR/$PROFILE > /dev/null 2>&1 || {
   echo >&2 "Config file not found at: ${0%/*}/${PROFILE}";
   exit 1;
 }
@@ -86,7 +89,7 @@ case "$COMMAND" in
 
     echo "Dumping ${DB_NAME} to file."
     mysqldump --user="${DB_USER}" --password=$DB_PASS --host=$DB_HOST ${DB_NAME} \
-      --add-drop-table > $SQLFILE
+      --add-drop-table > $WORKING_DIR/$SQLFILE
     ;;
 
   read)
@@ -96,6 +99,7 @@ case "$COMMAND" in
     fi
 
     echo "Reading ${SQLFILE} to ${DB_NAME}."
-    mysql --user="${DB_USER}" --password=$DB_PASS --host=$DB_HOST ${DB_NAME} < $SQLFILE
+    mysql --user="${DB_USER}" --password=$DB_PASS --host=$DB_HOST ${DB_NAME} \
+      < $WORKING_DIR/$SQLFILE
     ;;
 esac
