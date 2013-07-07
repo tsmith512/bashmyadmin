@@ -60,12 +60,42 @@ case "$COMMAND" in
     mysql --user="${SU_USER}" --password=$SU_PASS --host=$DB_HOST -e "
       CREATE DATABASE ${DB_NAME};
       GRANT ALL PRIVILEGES ON ${DB_NAME}.*
-        TO ${DB_USER}@localhost IDENTIFIED BY '${DB_PASS}';
+        TO ${DB_USER}@'localhost' IDENTIFIED BY '${DB_PASS}';
     ";;
 
+  drop)
+    read -p "Are you sure you want to drop ${DB_NAME} (y/n)? "
+    [ "$REPLY" != "y" ] || {
+      mysql --user="${SU_USER}" --password=$SU_PASS --host=$DB_HOST -e "
+        DROP DATABASE ${DB_NAME};
+      ";
+    }
+    read -p "Also drop user ${DB_USER} (y/n)? "
+    [ "$REPLY" != "y" ] || {
+      mysql --user="${SU_USER}" --password=$SU_PASS --host=$DB_HOST -e "
+        DROP USER ${DB_USER}@'localhost'
+      ";
+    }
+    ;;
+
   dump)
+    if [ -z "$SQLFILE" ]; then
+      echo >&2 "Dump requires a filename."
+      exit 1;
+    fi
+
     echo "Dumping ${DB_NAME} to file."
-    mysqldump --user="${SU_USER}" --password=$SU_PASS --host=$DB_HOST ${DB_NAME} \
+    mysqldump --user="${DB_USER}" --password=$DB_PASS --host=$DB_HOST ${DB_NAME} \
       --add-drop-table > $SQLFILE
+    ;;
+
+  read)
+    if [ -z "$SQLFILE" ]; then
+      echo >&2 "Read requires a filename."
+      exit 1;
+    fi
+
+    echo "Reading ${SQLFILE} to ${DB_NAME}."
+    mysql --user="${DB_USER}" --password=$DB_PASS --host=$DB_HOST ${DB_NAME} < $SQLFILE
     ;;
 esac
