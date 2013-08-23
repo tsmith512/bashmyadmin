@@ -9,12 +9,14 @@ WORKING_DIR="$(pwd)"
 
 GLOBALS="globals.sh"
 PROFILE=""
+PROFILEX=""
 COMMAND=""
 SQLFILE=""
 
-while getopts "p:c:f:" option; do
+while getopts "p:c:f:x:" option; do
   case "${option}" in
   p) PROFILE="${OPTARG}";;
+  x) PROFILEX="${OPTARG}";;
   c) COMMAND="${OPTARG}";;
   f) SQLFILE="${OPTARG}";;
   esac
@@ -102,4 +104,14 @@ case "$COMMAND" in
     mysql --user="${DB_USER}" --password=$DB_PASS --host=$DB_HOST ${DB_NAME} \
       < $WORKING_DIR/$SQLFILE
     ;;
+
+  xfer)
+    if [ -z "$PROFILEX" ]; then
+      echo >&2 "Destination profile not specified."
+      exit 1;
+    fi
+    TEMP=$(date | md5sum | head -c25)
+    $0 -p $PROFILE -c dump -f $TMP_DIR/$TEMP.sql
+    $0 -p $PROFILEX -c read -f $TMP_DIR/$TEMP.sql
+    rm $TMP_DIR/$TEMP.sql
 esac

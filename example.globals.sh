@@ -6,3 +6,6 @@ DB_HOST="localhost"
 ## (At the moment, this is only used for database creation.)
 SU_USER="root"
 SU_PASS="password"
+
+## Temporary directories are used for transferring databases
+TMP_DIR="/tmp"
