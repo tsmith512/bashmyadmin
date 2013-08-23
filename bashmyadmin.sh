@@ -15,10 +15,21 @@ SQLFILE=""
 
 while getopts "p:c:f:x:" option; do
   case "${option}" in
-  p) PROFILE="${OPTARG}";;
-  x) PROFILEX="${OPTARG}";;
-  c) COMMAND="${OPTARG}";;
-  f) SQLFILE="${OPTARG}";;
+  p)
+    PROFILE="${OPTARG}"
+    [ "${PROFILE/#\//}" != "$PROFILE" ] || PROFILE="$WORKING_DIR/$PROFILE"
+    ;;
+  x)
+    PROFILEX="${OPTARG}"
+    [ "${PROFILEX/#\//}" != "$PROFILEX" ] || PROFILEX="$WORKING_DIR/$PROFILEX"
+    ;;
+  c)
+    COMMAND="${OPTARG}"
+    ;;
+  f)
+    SQLFILE="${OPTARG}"
+    [ "${SQLFILE/#\//}" != "$SQLFILE" ] || SQLFILE="$WORKING_DIR/$SQLFILE"
+    ;;
   esac
 done
 
@@ -50,8 +61,8 @@ source $SCRIPT_DIR/$GLOBALS > /dev/null 2>&1 || {
   exit 1;
 }
 
-source $WORKING_DIR/$PROFILE > /dev/null 2>&1 || {
-  echo >&2 "Config file not found at: ${0%/*}/${PROFILE}";
+source $PROFILE > /dev/null 2>&1 || {
+  echo >&2 "Config file not found at: ${PROFILE}";
   exit 1;
 }
 
@@ -91,7 +102,7 @@ case "$COMMAND" in
 
     echo "Dumping ${DB_NAME} to file."
     mysqldump --user="${DB_USER}" --password=$DB_PASS --host=$DB_HOST ${DB_NAME} \
-      --add-drop-table > $WORKING_DIR/$SQLFILE
+      --add-drop-table > $SQLFILE
     ;;
 
   read)
@@ -102,7 +113,7 @@ case "$COMMAND" in
 
     echo "Reading ${SQLFILE} to ${DB_NAME}."
     mysql --user="${DB_USER}" --password=$DB_PASS --host=$DB_HOST ${DB_NAME} \
-      < $WORKING_DIR/$SQLFILE
+      < $SQLFILE
     ;;
 
   xfer)
